@@ -2,7 +2,7 @@
 /**
  * unhide_ambient_field.js
  *
- * Removes the opaque `background` declaration from the `body` rule of the
+ * Removes the opaque `background` / `background-color` declaration from the `body` rule of the
  * pages that still carry their own inline CSS, so the ambient field can be
  * seen on them.
  *
@@ -50,7 +50,7 @@ const EXCLUDE = new Set(['404.html']);
 const REMOVABLE = new Set(['var(--bg)', '#0a0a0b', '#0A0A0B', 'var(--bg-base)']);
 
 const BODY_RULE = /(^|[^-\w])body\s*\{([^}]*)\}/g;
-const BG_DECL = /(^|;)\s*background\s*:\s*([^;}]+?)\s*(?=;|$)/i;
+const BG_DECL = /(^|;)\s*background(?:-color)?\s*:\s*([^;}]+?)\s*(?=;|$)/i;
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

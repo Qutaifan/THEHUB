@@ -85,6 +85,7 @@
   <link rel="stylesheet" href="/css/motion.css" />
   <script>document.documentElement.className += ' js';</script>
   <script src="/js/motion.js" defer></script>
+  <script src="/js/hub-core.js" defer></script>
   <script src="/search.js" defer></script>
 </head>
 <body>
@@ -122,6 +123,14 @@
   <section class="hero-container hero-immersive">
     <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
     <div class="hero-hud" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <!-- The hub core. A live WebGL object drawn by /js/hub-core.js: four orbits for
+         the four pillars, one node per tool. Decorative, so aria-hidden; this div is
+         the layout placeholder and the drag surface, and motion.js moves the inner
+         element into the ambient field so it can blend against it. The rendered
+         still is the fallback for no script, no WebGL, or reduced motion. -->
+    <div class="hero-core" aria-hidden="true"><div class="hero-core-inner">
+      <noscript><img class="hero-core-poster" src="/img/fx/core.webp" alt="" width="640" height="640" decoding="async"></noscript>
+    </div></div>
 
     <div class="hero-status">
       <span class="fx-pulse-dot" aria-hidden="true"></span>
@@ -211,6 +220,8 @@
     </div>
   </section>
 
+  <div class="section-divider" aria-hidden="true"></div>
+
   <!-- 4 Category Pillars Filter Bar -->
   <section id="categories" style="margin-bottom: 2.5rem;">
     <div class="section-header-quiet">
@@ -242,6 +253,8 @@
       </button>
     </div>
   </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
 
   <!-- Featured Bento Grid (Categorized) -->
   <section id="featured" style="margin-bottom: 3.5rem;">
@@ -550,6 +563,8 @@
     </div>
   </section>
 
+  <div class="section-divider" aria-hidden="true"></div>
+
   <!-- Editorial methodology & transparency section -->
   <div class="ad-slot-container">
           <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);display:block;margin-bottom:0.5rem;">Advertisement</span>
@@ -588,25 +603,25 @@
     </p>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.5rem 0 2.5rem;">
-      <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+      <div class="fx-step" data-fx-card data-reveal style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
         <span style="font-family: var(--font-mono); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700;">STEP 01</span>
         <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.4rem 0 0.4rem;">Install or open the tool</h4>
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">A tool you can try without a credit card first is the starting bar for a listing. A trial that demands payment details does not qualify.</p>
       </div>
 
-      <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+      <div class="fx-step" data-fx-card data-reveal style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
         <span style="font-family: var(--font-mono); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700;">STEP 02</span>
         <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.4rem 0 0.4rem;">Check real pricing and free-tier limits</h4>
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Vendor pricing pages and documentation decide what the free tier actually includes — and the limit goes in the listing.</p>
       </div>
 
-      <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+      <div class="fx-step" data-fx-card data-reveal style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
         <span style="font-family: var(--font-mono); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700;">STEP 03</span>
         <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.4rem 0 0.4rem;">Compare privacy and export options</h4>
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Whether a tool runs locally, needs an account, or lets you leave with your files matters — listings say so.</p>
       </div>
 
-      <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
+      <div class="fx-step" data-fx-card data-reveal style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem;">
         <span style="font-family: var(--font-mono); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700;">STEP 04</span>
         <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.4rem 0 0.4rem;">Flag limitations, don't bury them</h4>
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Cons sections name the real limits, so you know who should not bother before installing anything.</p>

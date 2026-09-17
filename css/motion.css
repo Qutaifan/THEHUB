@@ -401,9 +401,10 @@
 .fx-shimmer {
   background: linear-gradient(100deg,
     var(--accent-cyan) 0%,
-    var(--accent-blue) 28%,
-    #E0F7FF 46%,
-    var(--accent-blue) 64%,
+    #67E8F9 22%,
+    #ECFEFF 42%,
+    var(--accent-blue) 62%,
+    #818CF8 84%,
     var(--accent-cyan) 100%);
   background-size: 260% 100%;
   -webkit-background-clip: text;
@@ -510,6 +511,767 @@
 @keyframes fxMarquee {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(-50%, 0, 0); }
+}
+
+
+/* 09a  TICKER RIPPLE =====================================================
+   Clicking a tool in the rail drops a ring of water at the point of contact
+   and sends an electric charge racing along the bar. motion.js spawns the
+   nodes into a layer that is clipped to the ticker, so the whole event stays
+   inside the rail. transform/opacity only — it cannot cost CLS, and the nodes
+   remove themselves once they have played.
+   ======================================================================== */
+
+.fx-ripple-host { position: relative; }
+.fx-ripple-layer {
+  position: absolute; inset: 0;
+  z-index: 3;                 /* above the marquee track */
+  pointer-events: none;
+  overflow: hidden;           /* belt-and-braces with .fx-ticker */
+}
+/* On a card the layer clips to the card's own radius, so the charge is
+   contained without clipping the card's lift, glow or tilt. */
+.fx-ripple-card > .fx-ripple-layer {
+  border-radius: inherit;
+  z-index: 1;
+}
+.fx-drop, .fx-drop-core, .fx-surge, .fx-bolt {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Water — concentric rings pushing out from the touch point. */
+.fx-drop {
+  width: 16px; height: 16px; margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.7), inset 0 0 8px rgba(34, 211, 238, 0.5);
+  opacity: 0;
+  animation: fxDrop 0.72s var(--ease) forwards;
+}
+@keyframes fxDrop {
+  0%   { transform: scale(0.2); opacity: 0; }
+  14%  { opacity: 0.95; }
+  100% { transform: scale(7); opacity: 0; }
+}
+
+/* Point-of-contact flash. */
+.fx-drop-core {
+  width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #E0F7FF 0%, var(--accent-cyan) 45%, transparent 72%);
+  opacity: 0;
+  animation: fxDropCore 0.5s ease-out forwards;
+}
+@keyframes fxDropCore {
+  0%   { transform: scale(0.3); opacity: 0; }
+  22%  { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+
+/* Electric current — a charge that races out along the rail, flickering as
+   it travels so it reads as live current rather than a clean beam. */
+.fx-surge {
+  top: var(--oy, 50%); height: 2px; margin-top: -1px;
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.85), 0 0 4px #E0F7FF;
+  opacity: 0;
+}
+.fx-surge-r {
+  transform-origin: left center;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.2), var(--accent-cyan), #E0F7FF);
+  animation: fxSurge 0.52s ease-out forwards;
+}
+.fx-surge-l {
+  transform-origin: right center;
+  background: linear-gradient(270deg, transparent, rgba(34, 211, 238, 0.2), var(--accent-cyan), #E0F7FF);
+  animation: fxSurge 0.52s ease-out forwards;
+}
+@keyframes fxSurge {
+  0%   { transform: scaleX(0)   scaleY(1);   opacity: 0.95; }
+  35%  { transform: scaleX(0.5) scaleY(1.6); opacity: 1; }
+  55%  { opacity: 0.85; }
+  70%  { transform: scaleX(0.8) scaleY(1);   opacity: 0.9; }
+  100% { transform: scaleX(1)   scaleY(0.6); opacity: 0; }
+}
+
+/* Forked filaments — thin bolts that crackle out in stepped jumps. */
+.fx-bolt {
+  height: 2px; width: var(--len, 90px);
+  transform-origin: left center;
+  transform: rotate(var(--ang, 0deg)) scaleX(0);
+  border-radius: 2px;
+  background: linear-gradient(90deg, #E0F7FF, var(--accent-cyan) 45%, transparent);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.9);
+  opacity: 0;
+  animation: fxBolt 0.44s steps(6, end) forwards;
+}
+@keyframes fxBolt {
+  0%   { transform: rotate(var(--ang, 0deg)) scaleX(0); opacity: 0; }
+  25%  { opacity: 1; }
+  55%  { transform: rotate(var(--ang, 0deg)) scaleX(1); opacity: 1; }
+  100% { transform: rotate(var(--ang, 0deg)) scaleX(1); opacity: 0; }
+}
+
+/* The struck item lifts and lights up as the charge leaves it. */
+.fx-ticker-item.fx-item-hit {
+  color: #E0F7FF;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+  animation: fxItemHit 0.5s ease-out;
+}
+.fx-ticker-item.fx-item-hit b { color: #fff; }
+.fx-ticker-item.fx-item-hit::before {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 1);
+  transform: scale(1.7);
+}
+@keyframes fxItemHit {
+  0%   { transform: translateY(0)    scale(1); }
+  30%  { transform: translateY(-2px) scale(1.06); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+
+/* 09b  REVIEW ARTICLE IMMERSION ==========================================
+   Applied by motion.js only on /reviews/<slug> pages (html gets .fx-review).
+   Turns the plain prose column into a sectioned instrument readout: a glowing
+   title, numbered section spines, cascading reveals, electric chips and a
+   colour-coded verdict for the pros/cons lists. Content is never touched —
+   this is presentation only.
+   ======================================================================== */
+
+/* Title — sits above the ambient field with a soft plasma glow; the words
+   still rise via the shared kinetic machinery (data-kinetic). */
+.fx-review main article .wrap h1 {
+  position: relative;
+  text-shadow: 0 0 34px rgba(34, 211, 238, 0.2);
+}
+
+/* Per-section cascade. --sub is set per block within its section, so each
+   section reveals as its own group instead of inheriting a running delay. */
+.js.fx-review .fx-doc-block.fx-reveal {
+  transition-delay: calc(var(--sub, 0) * 55ms);
+}
+
+/* Section headings become numbered spines. The base tick from
+   `.max-w h2::before` is widened into an energy bar; ::after prints a mono
+   section index in the margin. */
+.fx-review .fx-doc { counter-reset: fxsec; }
+.fx-review .fx-doc-h {
+  position: relative;
+  counter-increment: fxsec;
+}
+.fx-review .max-w h2.fx-doc-h::before,
+.fx-review .fx-doc-h::before {
+  width: 46px; height: 2px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.8);
+}
+.fx-review .fx-doc-h.is-in::before {
+  animation: fxSpine 0.9s var(--ease) both;
+}
+@keyframes fxSpine {
+  0%   { transform: scaleX(0); transform-origin: left center; opacity: 0.4; }
+  100% { transform: scaleX(1); transform-origin: left center; opacity: 1; }
+}
+.fx-review .fx-doc-h::after {
+  content: counter(fxsec, decimal-leading-zero);
+  position: absolute; top: 0.9rem; right: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.24em;
+  color: var(--accent-cyan);
+  opacity: 0.45;
+}
+/* On narrow screens the heading can wrap the full width; drop the margin
+   index rather than risk it sitting over the last word. */
+@media (max-width: 560px) {
+  .fx-review .fx-doc-h::after { display: none; }
+}
+
+/* Inline tech chips (the <span class="pill"> run under the title). */
+.fx-review .pill {
+  border-color: rgba(34, 211, 238, 0.28);
+  background: var(--accent-wash);
+  color: var(--text-secondary);
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+              box-shadow 0.25s var(--ease);
+}
+.fx-review .pill:hover {
+  color: #E0F7FF;
+  border-color: var(--border-subtle-hover);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+}
+
+/* Category badges get a slow live glow. */
+.fx-review .badge-row .badge {
+  animation: fxBadgeGlow 3.6s ease-in-out infinite;
+}
+@keyframes fxBadgeGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
+  50%      { box-shadow: 0 0 16px rgba(34, 211, 238, 0.35); }
+}
+
+/* Verdict lists — pros and cons rebuilt as colour-coded chips. Purely
+   presentational: the list text is unchanged, the markers are decorative. */
+.fx-review .fx-verdict {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.fx-review .fx-verdict li {
+  position: relative;
+  margin-bottom: 0;
+  padding: 0.6rem 0.8rem 0.6rem 2.1rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-left-width: 2px;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease),
+              transform 0.25s var(--ease);
+}
+.fx-review .fx-verdict li:hover { transform: translateX(3px); }
+.fx-review .fx-verdict li::before {
+  position: absolute;
+  left: 0.75rem; top: 0.6rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.fx-review .fx-pros li { border-left-color: #34D399; }
+.fx-review .fx-pros li:hover { border-color: rgba(52, 211, 153, 0.5); }
+.fx-review .fx-pros li::before { content: '+'; color: #34D399; }
+.fx-review .fx-cons li { border-left-color: #F87171; }
+.fx-review .fx-cons li:hover { border-color: rgba(248, 113, 113, 0.5); }
+.fx-review .fx-cons li::before { content: '\2013'; color: #F87171; }
+
+/* Related-tool cards — hover lights the border and casts a cyan glow.
+   !important overrides the inline border/transition on those <a> elements. */
+.fx-review main article > section a[href^="/reviews/"] {
+  transition: border-color 0.25s var(--ease), box-shadow 0.35s var(--ease) !important;
+}
+.fx-review main article > section a[href^="/reviews/"]:hover {
+  border-color: var(--border-subtle-hover) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.25),
+              0 16px 42px -16px rgba(34, 211, 238, 0.55) !important;
+}
+
+/* Spec lists — a bulleted term/definition list rebuilt as a scannable grid of
+   glowing rows: the leading <strong> is the term, lit; a node marks each row.
+   Presentation only — the list text is untouched. */
+.fx-review .fx-spec {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.fx-review .fx-spec li {
+  position: relative;
+  margin-bottom: 0;
+  padding: 0.7rem 0.9rem 0.7rem 2rem;
+  background: linear-gradient(90deg, var(--accent-wash), transparent 70%);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid rgba(34, 211, 238, 0.55);
+  border-radius: 9px;
+  color: var(--text-secondary);
+  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease),
+              box-shadow 0.25s var(--ease);
+}
+.fx-review .fx-spec li::before {
+  content: '';
+  position: absolute; left: 0.72rem; top: 1.05rem;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.9);
+}
+.fx-review .fx-spec li:hover {
+  transform: translateX(3px);
+  border-color: var(--border-subtle-hover);
+  box-shadow: 0 8px 30px -14px rgba(34, 211, 238, 0.6);
+}
+.fx-review .fx-spec li strong,
+.fx-review .fx-spec li b { color: #E0F7FF; }
+
+
+/* 09c  REVIEW BACKDROP + SECTION RAIL ====================================
+   A generative canvas seeded per tool sits inside the ambient field, and a
+   fixed outline rail tracks the section being read. Both are built by
+   motion.js only on /reviews/<slug> pages.
+   ======================================================================== */
+
+#fx-review-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  animation: fxBgIn 1.4s ease 0.1s forwards;
+}
+@keyframes fxBgIn { to { opacity: 0.92; } }
+
+/* The seeded canvas carries the texture wherever it runs, so the flat drift
+   grid is pulled right back to keep the two from fighting. */
+.has-seeded-bg .fx-grid { opacity: 0.18; }
+.has-seeded-bg .fx-grid-fine { opacity: 0.12; }
+
+/* Section rail — a fixed outline of the review, node per heading.
+   It is a <nav>, and site.css gives every bare nav a sticky dark plate with a
+   blur and a bottom border. That plate is what made the rail read as a box
+   pasted over the page, so it is explicitly cleared here: the rail has no
+   surface of its own and sits directly on the field. */
+.fx-rail {
+  position: fixed;
+  left: max(1.1rem, calc((100vw - var(--w-page, 760px)) / 2 - 12.5rem));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex; flex-direction: column;
+  gap: 0.9rem;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.fx-rail.is-ready { opacity: 1; }
+
+/* The spine the nodes hang on, filled to the scroll position. */
+.fx-rail-line {
+  position: absolute; left: 3px; top: 0.6rem; bottom: 0.6rem;
+  width: 1px;
+  background: var(--border-subtle);
+}
+/* The lit run of the spine, ending on the stage you are reading. */
+.fx-rail-line::after {
+  content: '';
+  position: absolute; left: -0.5px; top: 0; width: 2px;
+  height: var(--rail-fill, 0%);
+  background: linear-gradient(180deg,
+    rgba(123, 92, 255, 0.55), var(--accent-blue) 45%, var(--accent-cyan));
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.85), 0 0 22px rgba(34, 211, 238, 0.35);
+  transition: height 0.55s var(--ease);
+}
+
+.fx-rail-item {
+  position: relative;
+  display: flex; align-items: center; gap: 0.6rem;
+  padding-left: 0;
+  text-decoration: none;
+  color: var(--text-muted);
+}
+.fx-rail-dot {
+  position: relative; z-index: 1;
+  width: 7px; height: 7px; flex: 0 0 auto;
+  border-radius: 50%;
+  /* Transparent centre, so the field shows through the node instead of the
+     rail punching opaque chips out of it. */
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(232, 251, 255, 0.28);
+  transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease),
+              background 0.3s var(--ease);
+}
+.fx-rail-item.is-past .fx-rail-dot {
+  box-shadow: inset 0 0 0 1.5px rgba(56, 189, 248, 0.75);
+}
+.fx-rail-item:hover .fx-rail-dot {
+  box-shadow: inset 0 0 0 1.5px var(--accent-cyan),
+              0 0 10px rgba(34, 211, 238, 0.7);
+}
+.fx-rail-item.is-active .fx-rail-dot {
+  transform: scale(1.5);
+  background: var(--accent-cyan);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 1), 0 0 30px rgba(34, 211, 238, 0.45),
+              inset 0 0 0 1.5px var(--accent-cyan);
+}
+/* A slow ring leaving the live node — the one piece of motion that tells you
+   the rail is tracking rather than painted on. */
+.fx-rail-item.is-active .fx-rail-dot::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--accent-cyan);
+  animation: fxRailPing 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes fxRailPing {
+  0%   { transform: scale(1);   opacity: 0.85; }
+  70%  { transform: scale(3.4); opacity: 0; }
+  100% { transform: scale(3.4); opacity: 0; }
+}
+
+/* The stages are always named — the rail is a readout, not a menu that has to
+   be opened. Legibility comes from a glow on the type itself rather than from
+   a plate behind it, so nothing separates the rail from the field. */
+.fx-rail-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 0.05em;
+  white-space: nowrap;
+  max-width: 12.5rem; overflow: hidden; text-overflow: ellipsis;
+  color: rgba(232, 251, 255, 0.34);
+  text-shadow: 0 0 12px rgba(4, 10, 16, 0.95), 0 0 3px rgba(4, 10, 16, 1);
+  transition: color 0.35s var(--ease), text-shadow 0.35s var(--ease),
+              transform 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+.fx-rail-label b {
+  color: rgba(34, 211, 238, 0.55);
+  margin-right: 0.55rem;
+  font-weight: 700;
+  transition: color 0.35s var(--ease), text-shadow 0.35s var(--ease);
+}
+
+/* Sections already passed stay lit but quiet; the one being read burns. */
+.fx-rail-item.is-past .fx-rail-label { color: rgba(232, 251, 255, 0.5); }
+.fx-rail-item.is-past .fx-rail-label b { color: var(--accent-blue); }
+
+.fx-rail-item.is-active .fx-rail-label {
+  color: #E8FBFF;
+  transform: translateX(2px);
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.75), 0 0 4px rgba(4, 10, 16, 1);
+}
+.fx-rail-item.is-active .fx-rail-label b {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 14px rgba(34, 211, 238, 0.95);
+}
+
+.fx-rail-item:hover .fx-rail-label {
+  color: #E8FBFF;
+  text-shadow: 0 0 16px rgba(34, 211, 238, 0.6), 0 0 4px rgba(4, 10, 16, 1);
+}
+.fx-rail-item:hover .fx-rail-label b { color: var(--accent-cyan); }
+/* The rail is a set of links; the global link underline would fight the type. */
+.fx-rail-item, .fx-rail-item:hover, .fx-rail-item:focus {
+  text-decoration: none;
+}
+.fx-rail-item:focus-visible {
+  outline: 1px solid rgba(34, 211, 238, 0.7);
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+
+/* Not enough gutter under ~1180px — the top progress bar covers those. */
+@media (max-width: 1180px) { .fx-rail { display: none; } }
+
+
+/* 09d  FAQ ACCORDION =====================================================
+   Answers are closed until asked for, turning a wall of prose into a
+   scannable index.
+
+   The collapse is keyed on .fx-faq, which motion.js adds — deliberately, not
+   on html.js. If the script never runs, every answer renders open rather than
+   being sealed shut behind a toggle that will never work: content must not
+   depend on a script to be readable. motion.js is deferred and its init runs
+   synchronously at readyState 'interactive', so the fold lands before first
+   paint in practice, and the FAQ block sits far below the fold in any case.
+   ======================================================================== */
+
+.js .fx-faq .faq-a {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  transition: max-height 0.45s var(--ease), opacity 0.3s ease,
+              margin-top 0.3s var(--ease);
+}
+.js .fx-faq.is-open .faq-a {
+  max-height: 44rem;
+  opacity: 1;
+  margin-top: 0.65rem;
+}
+/* The first answer opens at first paint too, so the block never reads empty.
+   :first-child rather than a class, so it applies before any script runs. */
+.js .faq-list .faq-item:first-child .faq-a { max-height: 44rem; opacity: 1; }
+
+.js .fx-faq .faq-q {
+  position: relative;
+  cursor: pointer;
+  padding-right: 2.25rem;
+  margin-bottom: 0;
+  transition: color 0.25s var(--ease);
+}
+.js .fx-faq .faq-q:hover { color: var(--accent-cyan); }
+.js .fx-faq .faq-q:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+/* Toggle glyph — a drawn plus that rotates into a minus. Two bars so the
+   rotation reads, and no DOM node so nothing can shift. */
+.js .fx-faq .faq-q::before,
+.js .fx-faq .faq-q::after {
+  content: '';
+  position: absolute; right: 4px; top: 0.62em;
+  width: 13px; height: 1.5px;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.75);
+  transition: transform 0.4s var(--ease), opacity 0.3s ease;
+}
+.js .fx-faq .faq-q::after { transform: rotate(90deg); }
+.js .fx-faq.is-open .faq-q::after { transform: rotate(0deg); opacity: 0.35; }
+
+.js .fx-faq {
+  transition: border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
+}
+.js .fx-faq.is-open {
+  border-color: rgba(34, 211, 238, 0.34) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.12),
+              0 18px 46px -22px rgba(34, 211, 238, 0.6);
+}
+
+
+/* 09e  PILLAR PAGES ======================================================
+   The category pages brought onto the homepage's vocabulary: a rail that
+   reports where you are, drawn dividers, orbiting section marks, and cards
+   that hold their description until asked.
+   ======================================================================== */
+
+/* --- the category rail ------------------------------------------------- */
+
+/* The bar hosts a ripple, so it needs to clip one. */
+.fx-pillar .filters { overflow: hidden; }
+.fx-pillar .filter-scroll { position: relative; z-index: 4; }
+
+.fx-pillar .filter-btn {
+  position: relative;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+              background 0.25s var(--ease), transform 0.25s var(--ease),
+              box-shadow 0.3s var(--ease);
+}
+.fx-pillar .filter-btn:hover { transform: translateY(-1px); }
+
+/* The chip for the section you are actually inside. Distinct from .active,
+   which the page's own script owns for the last thing clicked. */
+.fx-pillar .filter-btn.is-current {
+  color: #E0F7FF;
+  border-color: rgba(34, 211, 238, 0.55);
+  background: var(--accent-wash-2);
+  box-shadow: 0 0 18px -4px rgba(34, 211, 238, 0.55);
+}
+/* A lit underline that reads as a position readout on the rail. */
+.fx-pillar .filter-btn.is-current::after {
+  content: '';
+  position: absolute; left: 14px; right: 14px; bottom: -1px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.9);
+  animation: fxRailUnderline 0.45s var(--ease) both;
+}
+@keyframes fxRailUnderline {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* --- drawn dividers ---------------------------------------------------- */
+
+.section-divider.fx-divider {
+  height: 24px;
+  background: none;
+  color: rgba(34, 211, 238, 0.34);
+  overflow: hidden;
+}
+.fx-divider-svg { display: block; width: 100%; height: 24px; }
+
+.fx-div-node {
+  fill: var(--accent-cyan);
+  opacity: 0.8;
+}
+/* The trace draws itself in when the divider scrolls into view. */
+.fx-divider.is-in .fx-div-trace {
+  stroke-dasharray: 1400;
+  animation: fxTraceDraw 1.5s var(--ease) both;
+}
+@keyframes fxTraceDraw {
+  from { stroke-dashoffset: 1400; }
+  to   { stroke-dashoffset: 0; }
+}
+/* A charge runs the length of the trace, forever. */
+.fx-div-spark {
+  stroke: #E0F7FF;
+  stroke-dasharray: 26 1374;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.95));
+  animation: fxTraceSpark 5.5s linear infinite;
+}
+@keyframes fxTraceSpark {
+  from { stroke-dashoffset: 1400; }
+  to   { stroke-dashoffset: 0; }
+}
+.fx-divider.is-in .fx-div-node {
+  animation: fxNodePulse 2.6s ease-in-out infinite;
+}
+.fx-divider.is-in .fx-div-node:nth-of-type(2) { animation-delay: 0.5s; }
+.fx-divider.is-in .fx-div-node:nth-of-type(3) { animation-delay: 1s; }
+@keyframes fxNodePulse {
+  0%, 100% { opacity: 0.35; r: 2.4; }
+  50%      { opacity: 1;    r: 3.4; }
+}
+
+/* --- orbiting section marks -------------------------------------------- */
+
+.fx-pillar .section-icon.fx-has-orbit { position: relative; overflow: visible; }
+.fx-orbit {
+  position: absolute; inset: -11px;
+  pointer-events: none;
+  color: rgba(34, 211, 238, 0.5);
+}
+.fx-orbit-svg { width: 100%; height: 100%; display: block; }
+.fx-orbit-ring {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;      /* without this the rotation swings off-canvas */
+  animation: fxOrbitSpin 14s linear infinite;
+}
+.fx-orbit-sat {
+  fill: var(--accent-cyan);
+  transform-origin: 32px 32px;
+  animation: fxOrbitSpin 9s linear infinite reverse;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.9));
+}
+.fx-orbit-sat-2 { animation-duration: 13s; opacity: 0.75; }
+@keyframes fxOrbitSpin { to { transform: rotate(360deg); } }
+
+/* The mark itself lights when its section is the one being read. */
+.fx-pillar .section-header:hover .fx-orbit { color: var(--accent-cyan); }
+
+/* --- tool cards -------------------------------------------------------- */
+
+.fx-pillar .tool-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(34, 211, 238, 0.05), transparent 42%),
+    var(--surface-1);
+  transition: border-color 0.3s var(--ease), box-shadow 0.4s var(--ease),
+              transform 0.5s var(--ease);
+}
+.fx-pillar .tool-card:hover {
+  border-color: rgba(34, 211, 238, 0.42) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.14),
+              0 24px 54px -26px rgba(34, 211, 238, 0.75);
+}
+/* The category colour bar at the card's top edge sweeps on hover. */
+.fx-pillar .tool-card::before {
+  background-size: 200% 100% !important;
+  transition: background-position 0.7s var(--ease), height 0.3s var(--ease);
+}
+.fx-pillar .tool-card:hover::before {
+  background-position: 100% 0 !important;
+  height: 3px !important;
+}
+
+/* The emoji tile gets a lit ring rather than a flat swatch. */
+.fx-pillar .tool-emoji {
+  position: relative;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.fx-pillar .tool-card:hover .tool-emoji {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.4),
+              0 0 20px -4px rgba(34, 211, 238, 0.8);
+}
+
+.fx-pillar .tool-name a { transition: color 0.25s var(--ease), text-shadow 0.25s var(--ease); }
+.fx-pillar .tool-card:hover .tool-name a {
+  color: #E0F7FF;
+  text-shadow: 0 0 14px rgba(34, 211, 238, 0.6);
+}
+
+/* The outbound button reads as a control: the arrow steps out on hover. */
+.fx-pillar .tool-link {
+  position: relative;
+  overflow: hidden;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+              background 0.25s var(--ease), letter-spacing 0.25s var(--ease);
+}
+.fx-pillar .tool-card:hover .tool-link {
+  color: #E0F7FF;
+  border-color: rgba(34, 211, 238, 0.5);
+  background: var(--accent-wash);
+  letter-spacing: 0.02em;
+}
+/* A charge wipes across the button as the card is entered. */
+.fx-pillar .tool-link::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent,
+    rgba(34, 211, 238, 0.25), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.7s var(--ease);
+}
+.fx-pillar .tool-card:hover .tool-link::after { transform: translateX(100%); }
+
+.fx-pillar .tool-badges .badge {
+  transition: box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.fx-pillar .tool-card:hover .tool-badges .badge {
+  box-shadow: 0 0 12px -3px currentColor;
+}
+
+/* --- folded descriptions ------------------------------------------------
+   Click or Enter opens the full text. The text itself is never altered — it
+   is all in the DOM for readers and crawlers; only how much is shown changes.
+   Keyed on .fx-clamp (added by motion.js) for the same reason as the FAQ: if
+   the script fails, descriptions render in full rather than truncated behind
+   a control that cannot open. */
+
+.js.fx-pillar .tool-desc.fx-clamp {
+  position: relative;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+  padding-bottom: 0.9rem;
+  transition: color 0.25s var(--ease);
+}
+.js.fx-pillar .tool-desc.fx-clamp.is-open {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+.js.fx-pillar .tool-desc.fx-clamp:hover { color: var(--text-primary); }
+.js.fx-pillar .tool-desc.fx-clamp:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* The affordance sits in the folded area, so opening does not move the text. */
+.js.fx-pillar .tool-desc.fx-clamp::after {
+  content: 'MORE +';
+  position: absolute; right: 0; bottom: 0;
+  padding-left: 2.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.16em;
+  color: var(--accent-cyan);
+  background: linear-gradient(90deg, transparent, var(--surface-1) 42%);
+}
+.js.fx-pillar .tool-desc.fx-clamp.is-open::after { content: 'LESS −'; }
+
+/* --- the jump-to-section control ----------------------------------------
+   toc.js injects this select together with its own <style>, which lands
+   after this file in the cascade. The extra `body` raises specificity so
+   these rules win without touching that script. */
+body .qf-jump select {
+  background: linear-gradient(180deg, var(--surface-1), var(--surface-2)) !important;
+  border: 1px solid rgba(34, 211, 238, 0.22) !important;
+  border-radius: 10px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.76rem !important;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary) !important;
+  padding: 0.7rem 0.9rem !important;
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), box-shadow 0.3s var(--ease),
+              color 0.25s var(--ease);
+}
+body .qf-jump select:hover,
+body .qf-jump select:focus {
+  color: #E0F7FF !important;
+  border-color: rgba(34, 211, 238, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.15),
+              0 0 24px -6px rgba(34, 211, 238, 0.7);
+  outline: none;
 }
 
 
@@ -958,9 +1720,22 @@ html.is-intro .fx-kinetic .fx-word {
 @media (prefers-reduced-motion: reduce) {
   .fx-grid, .fx-grid-fine, .fx-aurora, .fx-scan,
   .fx-ticker-track, .fx-shimmer, .fx-pulse-dot::after, .fx-caret::after,
-  .fx-sheen::after, .hero-cue i {
+  .fx-sheen::after, .hero-cue i,
+  .fx-review .badge-row .badge, .fx-review .fx-doc-h.is-in::before,
+  .fx-drop, .fx-drop-core, .fx-surge, .fx-bolt, .fx-item-hit,
+  .fx-div-spark, .fx-divider.is-in .fx-div-trace,
+  .fx-divider.is-in .fx-div-node,
+  .fx-orbit-ring, .fx-orbit-sat, .fx-pillar .filter-btn.is-current::after,
+  .fx-rail-item.is-active .fx-rail-dot::after {
     animation: none !important;
   }
+  .fx-rail-item.is-active .fx-rail-dot::after { display: none; }
+  .fx-rail-line::after { transition: none !important; }
+  /* The trace must not stay at a dash offset it will never animate away. */
+  .fx-divider .fx-div-trace { stroke-dasharray: none !important; }
+  .fx-div-spark { display: none; }
+  .fx-pillar .tool-card, .fx-pillar .tool-emoji,
+  .fx-pillar .tool-link::after { transition: none !important; transform: none !important; }
   /* Corner brackets stay, they just appear rather than scale in. */
   .fx-sheen::before { transition: none !important; transform: none !important; }
   .fx-card .card-tag { transition: none !important; }
@@ -1016,4 +1791,905 @@ html.is-intro .fx-kinetic .fx-word {
   .fx-card, .fx-card.is-tilting { transform: none !important; }
   .fx-sheen, .fx-edge, .fx-halo { display: none; }
   .fx-magnetic, .fx-magnetic.is-pulled { transform: none !important; }
+}
+
+
+/* 09f  ZYRN CREDIT =======================================================
+   The design credit in the footer of every page: `Designed by` in THEHUB's
+   own mono voice, followed by ZYRN's wordmark under ZYRN's own treatment —
+   Space Grotesk 500, the sheared halves, the Pulse seam at #6E56F8 and the
+   glitch burst. Ported from Lumina's css/zyrn-credit.css, which is the
+   reference implementation of this component.
+
+   The rule it exists to honour, and the reason none of the violet here is
+   converted to the site's cyan:
+
+       another firm's mark is not recoloured to fit ours.
+
+   So the lead-in is THEHUB's (mono, --text-muted, the footer's own idiom)
+   and the mark is not. #6E56F8 is the only colour on this site that is not
+   in its palette, and that is correct. Do not "harmonise" it.
+
+   FIVE THINGS THAT BREAK QUIETLY IF YOU TOUCH THEM
+   -----------------------------------------------
+   1. `footer a` in site.css is 0-0-2 and sets colour, size and a CYAN
+      HOVER. Left alone it recolours another firm's wordmark on hover,
+      which is the one thing this component exists not to do. Every rule
+      below that fights it is compound on purpose.
+   2. The face is pinned to `unicode-range: U+004E,U+0052,U+0059,U+005A` —
+      N R Y Z. The woff2 carries the whole latin set, so without the range
+      a stray `font-family:'Space Grotesk'` anywhere in 181 pages of
+      hand-maintained inline CSS would set THEHUB's own copy in another
+      brand's face. Do not widen it.
+   3. Every class is scoped under `.fx-zc`. Each page on this site still
+      carries its own inline <style> block, so a bare `.shear` or
+      `.glitch` is a collision waiting to happen.
+   4. The glitch animates the WRAPPER and the clones, never the halves.
+      The halves carry the shear latch; a keyframe transform on them
+      erases it, silently, because the last transform simply wins.
+   5. `.fx-zc` takes a full flex row of its own rather than becoming a
+      third item in the footer's `space-between`. There are four footer
+      shapes across the corpus and a third flex child re-lays out two of
+      them; a full row disturbs none.
+   ====================================================================== */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/space-grotesk/space-grotesk-500.woff2') format('woff2');
+  unicode-range: U+004E, U+0052, U+0059, U+005A;   /* N R Y Z — nothing else */
+}
+
+.fx-zc {
+  --zc-pulse: #6E56F8;
+  --zc-vapor: #F2F3F5;
+  --zc-dur:   300ms;
+
+  /* Its own row under whatever the footer already holds.
+
+     `width:100%` and NOT `flex:0 0 100%`. site.css turns the footer into a
+     COLUMN below 768px, and in a column container flex-basis is the HEIGHT —
+     so a 100% basis says nothing about width, `align-items:flex-start`
+     shrinks the box to its content, and the separator rule above it comes
+     out 145px long instead of spanning the footer. Measured at 390. A width
+     is the main axis in a row and the cross axis in a column, so it is the
+     one declaration that is right in both. */
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;                 /* the seam overhangs the word by ~.55em on each
+                                side; a tighter gap runs violet through the
+                                lead-in */
+  margin-top: 1.5rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--border-subtle);
+  line-height: 0;
+}
+
+/* THEHUB's voice, THEHUB's colour — the lead-in is ours, the mark is not. */
+.fx-zc .fx-zc-lead {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Beats `footer a` (0-0-2) on every property it sets — colour and size and
+   the cyan hover included. */
+.fx-zc a.fx-zc-link,
+.fx-zc a.fx-zc-link:hover,
+.fx-zc a.fx-zc-link:focus {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  padding: 2px 0;
+  font-size: inherit;
+  color: var(--zc-vapor);
+  text-decoration: none;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fx-zc a.fx-zc-link:focus-visible {
+  outline: 2px solid var(--zc-vapor);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .fx-zc a.fx-zc-link:hover { transform: translateY(-1px); }
+}
+
+/* A 17px wordmark is a 21px tap target, less than half of the 44px floor.
+   14px each side takes it to 45. Measured, not assumed — and note that
+   `pointer: coarse` follows TOUCH emulation in Chrome, not a viewport width,
+   so a probe that only narrows the window reports this rule as dead.
+   The padding buys the hit box and the equal negative margin gives the
+   layout back, so the credit occupies exactly the same space as before.
+   Coarse pointers only — a mouse does not need it and it would otherwise
+   enlarge the focus ring on desktop. */
+@media (pointer: coarse) {
+  .fx-zc a.fx-zc-link {
+    padding-top: 14px; padding-bottom: 14px;
+    margin-top: -14px; margin-bottom: -14px;
+  }
+}
+
+/* -- the shear ----------------------------------------------------------
+   Two copies of the word clipped to its top and bottom halves, pulled apart
+   by a fifth of an em, with a Pulse rule drawn through the cut.
+   `margin-top:-1em` is what stacks the second copy back over the first —
+   the halves are block-level and would otherwise sit on two lines. */
+.fx-zc .fx-zc-shear {
+  position: relative;
+  display: inline-block;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: var(--zc-size, 20px);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--zc-vapor);
+}
+.fx-zc .fx-zc-half { display: block; }
+.fx-zc .fx-zc-half--top { clip-path: inset(0 0 50% 0); }
+.fx-zc .fx-zc-half--bot { clip-path: inset(50% 0 0 0); margin-top: -1em; }
+.fx-zc .fx-zc-seam {
+  position: absolute;
+  left: -0.55em; right: -0.55em; top: 50%;
+  margin-top: -1px;
+  display: block; height: 2px;
+  background: var(--zc-pulse);
+  transform: scaleX(0);
+  opacity: 0;
+}
+/* The latch: it opens shortly after load and never closes again. */
+.fx-zc .fx-zc-shear .fx-zc-half,
+.fx-zc .fx-zc-shear .fx-zc-seam {
+  transition: transform 650ms cubic-bezier(0.83, 0, 0.17, 1),
+              opacity   650ms cubic-bezier(0.83, 0, 0.17, 1);
+}
+.fx-zc .fx-zc-shear.is-sheared .fx-zc-half--top { transform: translateX(-0.1em); }
+.fx-zc .fx-zc-shear.is-sheared .fx-zc-half--bot { transform: translateX(0.1em); }
+.fx-zc .fx-zc-shear.is-sheared .fx-zc-seam { transform: scaleX(1); opacity: 1; }
+
+/* -- the glitch ---------------------------------------------------------
+   Four artefacts on one burst: the wrapper kicks and skews, the type splits
+   into two chroma ghosts, two cloned bands are thrown sideways, and two
+   scan lines cut across in opposite directions. motion.js fires it at
+   irregular intervals — a fixed interval reads as a metronome, which is
+   the opposite of a glitch. */
+.fx-zc .fx-zc-glitch { position: relative; display: inline-block; }
+.fx-zc .fx-zc-glitch.is-micro { --zc-dur: 130ms; }
+
+/* 1 - jolt */
+.fx-zc .fx-zc-glitch.is-glitching,
+.fx-zc .fx-zc-glitch.is-micro { animation: fxZcJolt var(--zc-dur) steps(1, end) both; }
+@keyframes fxZcJolt {
+  0%   { transform: translate3d(0,0,0) skewX(0deg); }
+  8%   { transform: translate3d(-4px,1px,0) skewX(-1.4deg); }
+  18%  { transform: translate3d(3px,-1px,0) skewX(1deg) scaleX(1.02); }
+  27%  { transform: translate3d(-2px,0,0) skewX(0deg); }
+  38%  { transform: translate3d(5px,1px,0) skewX(1.6deg); }
+  49%  { transform: translate3d(-2px,-1px,0) skewX(-0.8deg) scaleX(0.99); }
+  61%  { transform: translate3d(2px,0,0) skewX(0deg); }
+  73%  { transform: translate3d(-5px,1px,0) skewX(-1.2deg); }
+  86%  { transform: translate3d(1px,0,0) skewX(0.4deg); }
+  100% { transform: translate3d(0,0,0) skewX(0deg); }
+}
+
+/* 2 - chromatic split, in the two colours the mark's own field emits */
+.fx-zc .fx-zc-glitch.is-glitching .fx-zc-shear,
+.fx-zc .fx-zc-glitch.is-micro .fx-zc-shear { animation: fxZcChroma var(--zc-dur) steps(1, end) both; }
+@keyframes fxZcChroma {
+  0%, 100% { text-shadow: none; }
+  9%   { text-shadow: 2px 0 #6E56F8, -2px 0 #33C9DE; }
+  22%  { text-shadow: -2px 0 #6E56F8, 2px 0 #33C9DE; }
+  35%  { text-shadow: none; }
+  52%  { text-shadow: 3px 0 #6E56F8, -2px 0 #33C9DE; }
+  64%  { text-shadow: none; }
+  79%  { text-shadow: -3px 0 #6E56F8, 2px 0 #33C9DE; }
+  92%  { text-shadow: none; }
+}
+
+/* 3 - slice displacement: clones thrown sideways, built at fire time */
+.fx-zc .fx-zc-ghost {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none; opacity: 0;
+  will-change: transform, clip-path;
+}
+.fx-zc .fx-zc-ghost .fx-zc-seam { opacity: 1; transform: scaleX(1); }
+.fx-zc .fx-zc-ghost--a .fx-zc-shear { color: #6E56F8; }
+.fx-zc .fx-zc-ghost--b .fx-zc-shear { color: #33C9DE; }
+.fx-zc .fx-zc-glitch.is-glitching .fx-zc-ghost--a { animation: fxZcSliceA var(--zc-dur) steps(1, end) both; }
+.fx-zc .fx-zc-glitch.is-glitching .fx-zc-ghost--b { animation: fxZcSliceB var(--zc-dur) steps(1, end) both; }
+@keyframes fxZcSliceA {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 1; clip-path: inset(4% 0 72% 0);  transform: translate3d(-9px,-1px,0); }
+  24% { opacity: 1; clip-path: inset(34% 0 48% 0); transform: translate3d(7px,0,0); }
+  33% { opacity: 0; }
+  58% { opacity: 1; clip-path: inset(66% 0 14% 0); transform: translate3d(-6px,1px,0); }
+  70% { opacity: 0; }
+  88% { opacity: 1; clip-path: inset(18% 0 62% 0); transform: translate3d(4px,0,0); }
+  96% { opacity: 0; }
+}
+@keyframes fxZcSliceB {
+  0%, 100% { opacity: 0; }
+  14% { opacity: 1; clip-path: inset(52% 0 30% 0); transform: translate3d(7px,1px,0); }
+  27% { opacity: 0; }
+  46% { opacity: 1; clip-path: inset(10% 0 76% 0); transform: translate3d(-7px,0,0); }
+  56% { opacity: 0; }
+  76% { opacity: 1; clip-path: inset(72% 0 8% 0);  transform: translate3d(5px,-1px,0); }
+  85% { opacity: 0; }
+}
+
+/* 4 - scan lines, running against each other */
+.fx-zc .fx-zc-glitch::after,
+.fx-zc .fx-zc-glitch::before {
+  content: ''; position: absolute;
+  left: -10px; right: -10px;
+  opacity: 0; pointer-events: none;
+}
+.fx-zc .fx-zc-glitch::after {
+  top: 38%; height: 2px; background: #6E56F8;
+  box-shadow: 0 0 10px rgba(110,86,248,0.95), 0 0 3px rgba(110,86,248,1);
+}
+.fx-zc .fx-zc-glitch::before {
+  top: 56%; height: 1px; background: #33C9DE;
+  box-shadow: 0 0 8px rgba(51,201,222,0.8);
+}
+.fx-zc .fx-zc-glitch.is-glitching::after  { animation: fxZcScanA var(--zc-dur) steps(1, end) both; }
+.fx-zc .fx-zc-glitch.is-glitching::before { animation: fxZcScanB var(--zc-dur) steps(1, end) both; }
+@keyframes fxZcScanA {
+  0%, 100% { opacity: 0;    top: 38%; }
+  18% { opacity: 1;    top: 24%; }
+  34% { opacity: 0;    top: 24%; }
+  52% { opacity: 0.85; top: 66%; }
+  66% { opacity: 0;    top: 66%; }
+  84% { opacity: 0.6;  top: 44%; }
+}
+@keyframes fxZcScanB {
+  0%, 100% { opacity: 0;    top: 56%; }
+  14% { opacity: 0.9;  top: 72%; }
+  28% { opacity: 0;    top: 72%; }
+  58% { opacity: 0.75; top: 30%; }
+  70% { opacity: 0;    top: 30%; }
+  90% { opacity: 0.55; top: 60%; }
+}
+
+/* The seam stutters in brightness only, never in position. */
+.fx-zc .fx-zc-glitch.is-glitching .fx-zc-seam { animation: fxZcSeam var(--zc-dur) steps(1, end) both; }
+@keyframes fxZcSeam {
+  0%, 100% { filter: none; }
+  22% { filter: brightness(2.2); }
+  40% { filter: none; }
+  60% { filter: brightness(0.4); }
+  78% { filter: brightness(1.8); }
+}
+
+/* site.css stacks the footer into a column below 768px; the credit is
+   already a full row, so only the mark's size changes. */
+@media (max-width: 768px) {
+  .fx-zc { --zc-size: 17px; gap: 12px; margin-top: 1.25rem; padding-top: 1.1rem; }
+}
+
+/* Reduced motion: none of the burst. The shear still latches — it is the
+   mark's resting state, not an animation. This block sits at the end of the
+   file so it cannot lose on source order to the rules above. */
+@media (prefers-reduced-motion: reduce) {
+  .fx-zc .fx-zc-glitch.is-glitching,
+  .fx-zc .fx-zc-glitch.is-micro,
+  .fx-zc .fx-zc-glitch.is-glitching::after,
+  .fx-zc .fx-zc-glitch.is-glitching::before,
+  .fx-zc .fx-zc-glitch.is-glitching .fx-zc-shear,
+  .fx-zc .fx-zc-glitch.is-glitching .fx-zc-seam { animation: none !important; }
+  .fx-zc .fx-zc-ghost { display: none !important; }
+  .fx-zc .fx-zc-shear .fx-zc-half,
+  .fx-zc .fx-zc-shear .fx-zc-seam { transition: none !important; }
+  .fx-zc a.fx-zc-link { transition: none !important; }
+}
+
+
+/* 13  HOME STAGE =========================================================
+   The landing page's instruments. Everything here hangs off markup that
+   motion.js injects on the homepage only (the orbit, the decode ghosts, the
+   share bars) or off classes the homepage alone carries, so no other page
+   picks any of it up. Paired with enhanceHome() in motion.js.
+   ======================================================================== */
+
+/* --- headline bloom -----------------------------------------------------
+   A soft cyan halo behind the type, so the words read as lit rather than
+   printed. The accent run is background-clipped text with a transparent
+   fill: a text-shadow there would show straight through the glyphs as mud,
+   so it carries a drop-shadow filter instead, which follows painted pixels. */
+.hero-immersive .hero-kinetic-headline {
+  text-shadow: 0 0 56px rgba(34, 211, 238, 0.16), 0 0 1px rgba(255, 255, 255, 0.3);
+}
+.hero-immersive .hero-kinetic-headline .fx-shimmer {
+  text-shadow: none;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.42));
+}
+@media (min-width: 1200px) {
+  .hero-immersive .hero-kinetic-headline { font-size: clamp(2.4rem, 5vw, 4.6rem); max-width: 980px; }
+}
+
+/* --- orbit --------------------------------------------------------------
+   A large instrument ring behind the composition: three rings at different
+   rates and directions, two satellites. It sits inside .hero-hud, so it is
+   behind the content and comes up with the bezel in the landing sequence. */
+.fx-orbit-stage {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: min(78vw, 720px); height: min(78vw, 720px);
+  transform: translate(-50%, -50%);
+  color: rgba(34, 211, 238, 0.42);
+  opacity: 0.55;
+  overflow: visible;
+}
+.fx-os-ring, .fx-os-sat {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+.fx-os-ring-1 { animation: fxOrbitSpin 90s linear infinite; }
+.fx-os-ring-2 { animation: fxOrbitSpin 140s linear infinite reverse; }
+.fx-os-ring-3 { animation: fxOrbitSpin 60s linear infinite; }
+.fx-os-sat circle { fill: var(--accent-cyan); filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.9)); }
+.fx-os-sat-1 { animation: fxOrbitSpin 38s linear infinite; }
+.fx-os-sat-2 { animation: fxOrbitSpin 26s linear infinite reverse; opacity: 0.7; }
+/* The orbit opens with the lens as the reader descends, and fades with it. */
+.js .is-pinned .fx-orbit-stage {
+  transform: translate(-50%, -50%) scale(calc(1 + var(--hud, 0) * 0.12));
+  opacity: calc(0.55 - var(--hero, 0) * 0.35);
+}
+
+/* --- decode ---------------------------------------------------------------
+   The real text stays in flow with its colour dropped; the ghost draws the
+   scramble over it. Resolved characters in the label's own colour, the
+   unresolved tail in cyan. */
+.fx-dec { position: relative; }   /* never re-boxes: a block eyebrow made inline-block shifted the whole hero (CLS 0.25 on contact) */
+.fx-dec-real { transition: color 0.2s ease; }
+.fx-dec.is-decoding .fx-dec-real { color: transparent; }
+.fx-dec-ghost {
+  position: absolute; inset: 0;
+  white-space: pre;
+  pointer-events: none;
+}
+.fx-dec-noise { color: var(--accent-cyan); opacity: 0.85; }
+
+/* --- command line ---------------------------------------------------------
+   A light sweeps the prompt on approach; the caret glyph burns while a hint
+   is being typed. */
+.hero-command { overflow: hidden; }
+.hero-command::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 32%, rgba(34, 211, 238, 0.12) 50%, transparent 68%);
+  transform: translateX(-110%);
+}
+.hero-command:hover::after,
+.hero-command:focus-visible::after { animation: fxCmdSweep 0.9s var(--ease); }
+@keyframes fxCmdSweep { to { transform: translateX(110%); } }
+.hero-command-prompt { transition: color 0.3s ease, text-shadow 0.3s ease; }
+.hero-command.is-typing .hero-command-prompt {
+  color: #E0F7FF;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+}
+
+/* --- pillar share bars --------------------------------------------------
+   The slot under each count is reserved by padding keyed on html.js, which is
+   set inline in <head>, so the bar's arrival cannot move the hero. */
+.js .hero-stats-strip .stat-item { position: relative; padding-bottom: 14px; }
+.fx-stat-bar {
+  position: absolute; left: 50%; bottom: 2px;
+  width: 64px; height: 2px;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.fx-stat-bar b {
+  display: block; height: 100%; width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent-cyan));
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.7);
+  transition: transform 1.2s var(--ease) 0.35s;
+}
+.hero-stats-strip.is-in .fx-stat-bar b { transform: scaleX(var(--share, 0)); }
+
+/* A slow light passes over the strip, so it reads as a live readout. */
+.hero-stats-strip { overflow: hidden; }
+.hero-stats-strip::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.06), transparent);
+  transform: translateX(-110%);
+  animation: fxStripSweep 8s ease-in-out infinite;
+}
+@keyframes fxStripSweep {
+  0%, 55% { transform: translateX(-110%); }
+  100%    { transform: translateX(360%); }
+}
+
+/* --- category rail ----------------------------------------------------
+   The selected pillar carries a readout underline that scans back and forth,
+   and its count lights. */
+.category-chip-card { overflow: hidden; }
+.category-chip-card::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  opacity: 0;
+  transform: translateX(-60%);
+  transition: opacity 0.3s ease;
+}
+.category-chip-card.active-pill::after { opacity: 0.9; animation: fxChipScan 3.2s ease-in-out infinite; }
+@keyframes fxChipScan {
+  0%   { transform: translateX(-60%); }
+  50%  { transform: translateX(60%); }
+  100% { transform: translateX(-60%); }
+}
+.category-chip-card.active-pill .cat-count { color: var(--accent-cyan); }
+
+/* --- drawn dividers between the home sections --------------------------- */
+.fx-home .section-divider { margin: 0.25rem 0 2rem; }
+
+/* --- editorial method cards ------------------------------------------- */
+.fx-home .fx-step { transition: border-color 0.3s ease, box-shadow 0.4s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-os-ring, .fx-os-sat, .hero-command::after,
+  .hero-stats-strip::after, .category-chip-card.active-pill::after {
+    animation: none !important;
+  }
+  .js .is-pinned .fx-orbit-stage { transform: translate(-50%, -50%) !important; opacity: 0.55 !important; }
+  .fx-stat-bar b { transition: none !important; }
+  .fx-dec-ghost { display: none; }
+  .fx-dec.is-decoding .fx-dec-real { color: inherit; }
+}
+
+
+/* 14  NEON FIELD ==========================================================
+   Raises the ambient layer to meet the neon layer in site.css §21, and takes
+   the home stage's instruments to the rest of the site: an orbit behind
+   every page hero, the decode on every mono label. Paired with
+   enhanceStage() in motion.js.
+   ======================================================================== */
+
+.fx-grid {
+  opacity: 0.72;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.08) 1px, transparent 1px);
+}
+.fx-grid.fx-grid-fine {
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+}
+.fx-aurora { opacity: 0.62; }
+.fx-aurora-1 { background: radial-gradient(circle, rgba(34, 211, 238, 0.36), transparent 68%); }
+.fx-aurora-2 { background: radial-gradient(circle, rgba(56, 189, 248, 0.28), transparent 68%); }
+.fx-aurora-3 { background: radial-gradient(circle, rgba(14, 116, 144, 0.40), transparent 68%); }
+/* A fourth mass in the second hue. Violet under the cyan gives the field a
+   duotone depth one colour cannot. */
+.fx-aurora-4 {
+  width: 38vw; height: 38vw; min-width: 300px; min-height: 300px;
+  bottom: 4vh; right: -8vw;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.22), transparent 66%);
+  animation: fxDrift2 46s ease-in-out infinite reverse;
+}
+.fx-scan {
+  background: linear-gradient(to bottom, transparent,
+    rgba(34, 211, 238, 0.05) 42%,
+    rgba(34, 211, 238, 0.09) 50%,
+    rgba(34, 211, 238, 0.05) 58%,
+    transparent);
+}
+.fx-halo {
+  background: radial-gradient(640px circle at var(--px, 50%) var(--py, 40%),
+    rgba(34, 211, 238, 0.11), transparent 62%);
+}
+.fx-progress { box-shadow: 0 0 16px rgba(34, 211, 238, 0.9), 0 0 40px rgba(34, 211, 238, 0.4); }
+.has-seeded-bg .fx-grid { opacity: 0.26; }
+.has-seeded-bg .fx-grid-fine { opacity: 0.16; }
+
+/* --- lit surfaces ------------------------------------------------------- */
+.fx-card.is-tilting {
+  border-color: rgba(34, 211, 238, 0.6);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.55),
+    0 0 36px rgba(34, 211, 238, 0.22),
+    0 0 90px -30px rgba(34, 211, 238, 0.6);
+}
+.fx-sheen {
+  background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(34, 211, 238, 0.2), transparent 60%);
+}
+.fx-sheen::before { filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.9)); }
+.fx-card:hover .fx-sheen::before,
+.fx-card:focus-within .fx-sheen::before { opacity: 1; }
+.fx-sheen::after { box-shadow: 0 0 22px rgba(34, 211, 238, 0.8); }
+
+.hero-hud span {
+  border-color: rgba(34, 211, 238, 0.75);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.7));
+}
+.fx-orbit-stage { color: rgba(34, 211, 238, 0.55); }
+
+.fx-ticker {
+  border-block-color: rgba(34, 211, 238, 0.16);
+  box-shadow: inset 0 1px 18px -12px rgba(34, 211, 238, 0.6), inset 0 -1px 18px -12px rgba(34, 211, 238, 0.6);
+}
+.fx-ticker-item::before { box-shadow: 0 0 10px rgba(34, 211, 238, 1), 0 0 20px rgba(34, 211, 238, 0.5); }
+.fx-ticker-item b { color: var(--text-primary); }
+.fx-ticker-item:hover b { color: #E0F7FF; text-shadow: var(--neon-text); }
+.fx-caret::after { box-shadow: 0 0 12px rgba(34, 211, 238, 1), 0 0 24px rgba(34, 211, 238, 0.5); }
+
+/* Every accent run that is background-clipped text: no text-shadow (it would
+   show through the transparent fill) — a drop-shadow follows the pixels. */
+.fx-shimmer { text-shadow: none; filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.42)); }
+
+.fx-div-node { filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.9)); }
+.section-divider.fx-divider { color: rgba(34, 211, 238, 0.5); }
+.fx-review .pill { box-shadow: 0 0 10px rgba(34, 211, 238, 0.1); }
+.fx-review .fx-doc-h::after { opacity: 0.7; text-shadow: var(--neon-text); }
+.fx-review main article .wrap h1 { text-shadow: 0 0 34px rgba(34, 211, 238, 0.28), 0 0 80px rgba(34, 211, 238, 0.12); }
+
+/* --- the page orbit ------------------------------------------------------
+   Behind every `section.hero` (pillar, alternative, about, contact). The
+   hero clips its overflow, so what shows is an arc rising behind the title.
+   `.hero > *` makes every child position:relative; this is the one child
+   that must be absolute, hence the compound selector. */
+.hero > .fx-orbit-stage {
+  position: absolute;
+  left: 50%; top: 52%;
+  width: min(72vw, 640px); height: min(72vw, 640px);
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Decode ghosts on labels that are not strictly monospace must never poke
+   past the real text's box. */
+.fx-dec-ghost { overflow: hidden; }
+
+
+/* 15  HOME CORE ===========================================================
+   The hub, made physical. THEHUB's mark is a core with satellites on spokes;
+   the hero now carries that object as a living hologram — a rendered loop on
+   pure black, composited with `mix-blend-mode: screen` so the black drops out
+   and only its light lands on the field.
+
+   Markup is authored in index.html (not injected), so the layout below is
+   final at first paint and the core's arrival cannot shift anything. The
+   <video> ships with preload="none" and no source: the poster is all that
+   loads up front. motion.js attaches the sources after load, only when the
+   reader has not asked for reduced motion or data saving, and pauses the loop
+   whenever it is off screen.
+
+   Two compositions:
+     >= 1100px  split stage — copy left, core right, stats across the bottom
+     <  1100px  centred stage — the core sits dimmed behind the headline
+   ======================================================================== */
+
+/* Where the core actually renders. A blend mode only sees backdrop inside its
+   own stacking context; the hero is position:sticky (always a stacking
+   context) and the field is a fixed layer outside it, so blended in place the
+   render's black stays a solid disc. motion.js moves .hero-core-inner into
+   this host, inside .fx-field, above the grid, aurora and constellation and
+   below the vignette, and keeps it on top of the placeholder below. */
+.fx-core-host {
+  position: absolute; left: 0; top: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+@media (max-width: 1099px) { .fx-core-host { opacity: 0.5; } }
+/* The placeholder is wider than a phone viewport by design. `clip`, not
+   `hidden`: it must not turn the track into a scroll container, which would
+   break the sticky pin inside it. */
+.hero-scroll-track { overflow-x: clip; }
+
+/* `.hero-immersive > *` in site.css is (0,3,0) and forces position:relative;
+   the doubled class matches it and wins on order. */
+.hero-immersive > .hero-core.hero-core {
+  position: absolute;
+  top: 2.5rem; left: 50%;
+  width: min(124vw, 600px);
+  aspect-ratio: 1;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate3d(-50%, 0, 0);
+}
+.hero-core-inner {
+  position: absolute; inset: 0;
+  transform:
+    translate3d(calc(var(--cx, 0) * -16px), calc(var(--cy, 0) * -12px), 0)
+    scale(calc(1 + var(--hero, 0) * 0.22));
+  /* Gone before the stage starts its own exit fade at 0.78: once the hero's
+     opacity drops it becomes a group again and the blend would go solid. */
+  /* 0.999, not 1: the <video> is its own compositor layer, and at full
+     opacity Chrome draws it straight through, skipping the parent's screen
+     blend (measured: a solid black disc at rest, correct once scrolling had
+     dropped this below 1). Any opacity under 1 forces a flattened surface. */
+  opacity: calc(0.999 - var(--hero, 0) * 1.25);
+  will-change: transform;
+}
+.hero-core-gl {
+  /* Overscans the box 1.7x so dust, streaks and the shockwave have room; the
+     mask fades it out before its square edge. Opaque black by design — the
+     host screen-blends it away. */
+  position: absolute;
+  left: -35%; top: -35%;
+  width: 170%; height: 170%;
+  display: block;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 70%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 70%);
+}
+/* The rendered still: shown only with no script, no WebGL, or reduced motion. */
+.hero-core-poster {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  filter: contrast(1.18) brightness(0.96) saturate(1.15);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 70%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 46%, transparent 70%);
+}
+
+/* The bloom the render itself cannot cast past its own frame. */
+.hero-core-inner::before {
+  content: '';
+  position: absolute; inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(103, 232, 249, 0.46) 0%,
+    rgba(34, 211, 238, 0.20) 26%,
+    rgba(129, 140, 248, 0.11) 48%,
+    transparent 66%);
+  animation: fxCoreBloom 5s ease-in-out infinite;
+}
+@keyframes fxCoreBloom {
+  0%, 100% { opacity: 0.7; transform: scale(0.96); }
+  50%      { opacity: 1;   transform: scale(1.04); }
+}
+/* Reticle — an instrument bezel the object sits inside. It leans toward the
+   pointer's excitement: tighter and brighter while the core is being handled. */
+.fx-core-reticle {
+  position: absolute; inset: -4%;
+  color: rgba(103, 232, 249, 0.5);
+  transition: transform 0.6s var(--ease), color 0.4s ease;
+}
+.fx-core-reticle svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.fx-core-reticle .rt-ticks, .fx-core-reticle .rt-arcs { transform-box: view-box; transform-origin: 50% 50%; }
+.fx-core-reticle .rt-ticks { opacity: 0.55; animation: fxOrbitSpin 120s linear infinite; }
+.fx-core-reticle .rt-arcs  { animation: fxOrbitSpin 46s linear infinite reverse; }
+.fx-core-reticle .rt-cross { opacity: 0.9; }
+
+/* Orbit labels — one per pillar, riding its lead satellite. Text and count are
+   copied from the stats strip; positioned every frame by hub-core.js. */
+.fx-core-label {
+  position: absolute; left: 0; top: 0;
+  display: none;
+  align-items: baseline; gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+  color: #E2EBF8;
+  text-shadow: 0 0 10px rgba(4, 6, 11, 0.9);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.fx-core-label b {
+  font-size: 0.86rem; font-weight: 700; letter-spacing: 0;
+  color: var(--pc);
+  text-shadow: 0 0 12px var(--pc);
+}
+.fx-core-label::before {
+  content: ''; align-self: center;
+  width: 14px; height: 1px; margin-right: 0.2em;
+  background: linear-gradient(90deg, transparent, var(--pc));
+}
+@media (min-width: 1100px) { .fx-core-label { display: inline-flex; } }
+
+/* Landing sequence: the object assembles itself in WebGL; CSS only fades the
+   host in so the reticle and bloom do not pop. No blur — this is a live canvas. */
+.is-intro .hero-core-inner { animation: introFade 1.1s var(--ease) 0.6s both; }
+
+/* The placeholder is the drag surface. Interactive only on the split stage:
+   below it the core sits behind the headline and the type must win. */
+.hero-core-hint { display: none; }
+@media (min-width: 1100px) {
+  .hero-immersive > .hero-core.hero-core {
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: pan-y;
+    -webkit-user-select: none; user-select: none;
+    border-radius: 50%;
+  }
+  .hero-immersive > .hero-core.is-grabbing { cursor: grabbing; }
+  .core-live .hero-core-hint {
+    display: block;
+    position: absolute; left: 50%; bottom: 9%;   /* clear of the stats strip the box overlaps */
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text-muted);
+    opacity: calc(0.85 - var(--hero, 0) * 3);
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+  .is-intro .hero-core-hint { animation: introFade 0.8s var(--ease) 2.2s both; }
+  .hero-core.is-touched .hero-core-hint { opacity: 0; }
+}
+
+/* --- the split stage --------------------------------------------------- */
+@media (min-width: 1100px) {
+  .hero-immersive.hero-immersive,
+  .js .hero-scroll-track.is-pinned > .hero-immersive.hero-immersive {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    column-gap: 1.5rem;
+    align-content: center;
+    align-items: start;
+    justify-items: start;
+    text-align: left;
+  }
+  .hero-immersive > .hero-status,
+  .hero-immersive > .hero-kinetic-headline,
+  .hero-immersive > .hero-subtext,
+  .hero-immersive > .hero-command,
+  .hero-immersive > .hero-cta-group { grid-column: 1; }
+
+  .hero-immersive > .hero-kinetic-headline.hero-kinetic-headline {
+    font-size: clamp(2.7rem, 4.35vw, 4.5rem);
+    max-width: 700px;
+    text-wrap: balance;
+  }
+  .hero-immersive > .hero-subtext { margin-left: 0; max-width: 560px; }
+  .hero-immersive > .hero-command { margin-left: 0; }
+  .hero-immersive > .hero-cta-group { justify-content: flex-start; }
+
+  .hero-immersive > .hero-stats-strip,
+  .hero-immersive > .hero-cue { grid-column: 1 / -1; justify-self: center; }
+  .hero-immersive > .hero-stats-strip { max-width: none; margin-top: 0.75rem; }
+
+  .hero-immersive > .hero-core.hero-core {
+    position: relative;
+    top: auto; left: auto;
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    align-self: center;
+    justify-self: center;
+    width: min(100%, 620px);
+    transform: none;
+    margin: -2.5rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-core-inner::before, .fx-core-reticle .rt-ticks, .fx-core-reticle .rt-arcs,
+  .is-intro .hero-core-inner, .is-intro .hero-core-hint { animation: none !important; }
+  .hero-core-inner { transform: none !important; opacity: 0.999 !important; }
+}
+
+
+/* 16  PILLAR HOLOGRAMS ====================================================
+   The five category chips become cards, each carrying its pillar's hologram.
+   The art is a CSS background on ::before, screen-blended and masked toward
+   the text side, dim at rest and lit for the hovered and the selected pillar.
+   The chip's text, emoji and count are untouched.
+   ======================================================================== */
+
+.bento-grid-categories .category-chip-card {
+  isolation: isolate;
+  min-height: 128px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+}
+.bento-grid-categories .category-chip-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  z-index: -1;
+  background: var(--art) right -18px center / auto 128% no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0.26;
+  transform-origin: 80% 50%;
+  transition: opacity 0.45s var(--ease), transform 0.8s var(--ease);
+  -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 62%);
+  mask-image: linear-gradient(90deg, transparent 8%, #000 62%);
+}
+.bento-grid-categories .category-chip-card:hover::before,
+.bento-grid-categories .category-chip-card:focus-visible::before { opacity: 0.7; transform: scale(1.07); }
+.bento-grid-categories .category-chip-card.active-pill::before { opacity: 0.85; transform: scale(1.04); }
+
+.bento-grid-categories .category-chip-card:nth-child(1) { --art: url('/img/fx/core-480.webp'); }
+.bento-grid-categories .category-chip-card:nth-child(2) { --art: url('/img/fx/pillar-ai.webp'); }
+.bento-grid-categories .category-chip-card:nth-child(3) { --art: url('/img/fx/pillar-utilities.webp'); }
+.bento-grid-categories .category-chip-card:nth-child(4) { --art: url('/img/fx/pillar-apps.webp'); }
+.bento-grid-categories .category-chip-card:nth-child(5) { --art: url('/img/fx/pillar-cli.webp'); }
+
+.bento-grid-categories .cat-name { font-size: 0.92rem; text-shadow: 0 1px 8px rgba(4, 6, 11, 0.9); }
+.bento-grid-categories .cat-count {
+  font-size: 1.55rem; font-weight: 700; line-height: 1;
+  color: var(--text-primary);
+  text-shadow: 0 1px 10px rgba(4, 6, 11, 0.9);
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+.bento-grid-categories .category-chip-card:hover .cat-count,
+.bento-grid-categories .category-chip-card.active-pill .cat-count {
+  color: #A5F3FC;
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.75);
+}
+@media (min-width: 1100px) {
+  .bento-grid-categories { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .bento-grid-categories .category-chip-card { min-height: 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bento-grid-categories .category-chip-card::before { transition: none !important; transform: none !important; }
+}
+
+
+/* 17  PILLAR SPECTRUM =====================================================
+   One neon per pillar, used everywhere that pillar appears on the homepage:
+   its orbit in the hub core (hub-core.js), its figure in the stats strip, and
+   its card in the category rail. --pc is the pillar colour.
+     AI cyan #22D3EE · Utilities blue #60A5FA · Apps violet #A78BFA · CLI emerald #34D399
+   ======================================================================== */
+
+.hero-stats-strip .stat-item:nth-child(1) { --pc: #22D3EE; }
+.hero-stats-strip .stat-item:nth-child(2) { --pc: #60A5FA; }
+.hero-stats-strip .stat-item:nth-child(3) { --pc: #A78BFA; }
+.hero-stats-strip .stat-item:nth-child(4) { --pc: #34D399; }
+.hero-stats-strip .stat-item:nth-child(5) { --pc: #CFFAFE; }
+.hero-stats-strip .stat-item { transition: transform 0.35s var(--ease); }
+.hero-stats-strip .stat-val {
+  color: var(--pc, var(--accent-cyan));
+  text-shadow: 0 0 16px var(--pc, var(--accent-cyan));
+  transition: text-shadow 0.3s ease;
+}
+.hero-stats-strip .stat-lbl { transition: color 0.3s ease; }
+.hero-stats-strip .fx-stat-bar b {
+  background: linear-gradient(90deg, transparent, var(--pc, var(--accent-cyan)));
+  box-shadow: 0 0 8px var(--pc, var(--accent-cyan));
+}
+/* Lit from either side of the link: the stat is hovered, or its orbit's lead
+   satellite is (hub-core.js sets .is-hot). */
+.hero-stats-strip .stat-item:hover, .hero-stats-strip .stat-item.is-hot { transform: translate3d(0, -2px, 0); }
+.hero-stats-strip .stat-item:hover .stat-val, .hero-stats-strip .stat-item.is-hot .stat-val {
+  text-shadow: 0 0 10px var(--pc), 0 0 28px var(--pc);
+}
+.hero-stats-strip .stat-item:hover .stat-lbl, .hero-stats-strip .stat-item.is-hot .stat-lbl { color: var(--text-primary); }
+
+.bento-grid-categories .category-chip-card:nth-child(1) { --pc: #67E8F9; }
+.bento-grid-categories .category-chip-card:nth-child(2) { --pc: #22D3EE; }
+.bento-grid-categories .category-chip-card:nth-child(3) { --pc: #60A5FA; }
+.bento-grid-categories .category-chip-card:nth-child(4) { --pc: #A78BFA; }
+.bento-grid-categories .category-chip-card:nth-child(5) { --pc: #34D399; }
+.bento-grid-categories .category-chip-card:hover,
+.bento-grid-categories .category-chip-card.active-pill { border-color: var(--pc); }
+.bento-grid-categories .category-chip-card.active-pill {
+  box-shadow: 0 0 24px -4px var(--pc), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.bento-grid-categories .category-chip-card::after { background: linear-gradient(90deg, transparent, var(--pc), transparent); }
+.bento-grid-categories .category-chip-card:hover .cat-count,
+.bento-grid-categories .category-chip-card.active-pill .cat-count {
+  color: var(--pc);
+  text-shadow: 0 0 18px var(--pc);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-stats-strip .stat-item { transition: none !important; transform: none !important; }
 }

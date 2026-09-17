@@ -1,5 +1,5 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-08-29 | Updated: 2026-08-29 -->
+<!-- Generated: 2026-08-29 | Updated: 2026-09-17 -->
 
 # js
 
@@ -14,14 +14,14 @@ That is why adding an effect here costs one file instead of a bulk regex rewrite
 corpus — and root `AGENTS.md` hard rule §1.4 exists because such a rewrite once destroyed
 the entire review corpus.
 
-Untracked as of 2026-08-29 (`git status` reports `?? js/`); new work on the
-`design/unify-and-homepage` branch, not yet committed.
+Both files are committed (first in PR #35, extended on `design/neon-hub-core`).
 
 ## Key Files
 
 | File | Description |
 |------|-------------|
-| `motion.js` | 952 lines. Single IIFE, `'use strict'`, no exports and no globals. Loaded sitewide as `<script src="/js/motion.js" defer>`. |
+| `motion.js` | 2,267 lines (2026-09-17). Single IIFE, `'use strict'`, no exports and no globals. Loaded sitewide as `<script src="/js/motion.js" defer>`. |
+| `hub-core.js` | 681 lines. **Homepage only**, loaded after `motion.js`. The hero's hub core as a real-time WebGL object — see "The hub core" below. |
 
 Linked by 179 of the 180 site HTML pages (measured 2026-08-29); the holdout is `404.html`.
 
@@ -36,9 +36,9 @@ Three capability flags are read once at startup (`motion.js:23–26`) and gate e
 | `supportsIO` | `'IntersectionObserver' in window` | Reveals and counters resolve immediately instead of on scroll |
 
 `init()` runs at the bottom of the file (on `DOMContentLoaded`, or immediately if the
-document is already parsed) and calls each enhancer in order: `armIntro`, `buildField`,
-`enhanceBrand`, `wrapTables`, `armHeroScroll`, `splitKinetic`, `enhanceCards`,
-`enhanceMagnets`, `armReveals`, `armCounters`, `armTickers`, `armCanvas`.
+document is already parsed) and calls each enhancer in order. Read the order from `init()`
+itself rather than from a list here — it has grown (review, pillar, stage, home, core) and
+some enhancers stamp attributes that later ones consume, so the order is load-bearing.
 
 ### Custom properties written to the DOM
 
@@ -65,6 +65,35 @@ scrollbar. Do not move it into the frame loop.
 `.hero-immersive`, `.hero-scroll-track`, `.fx-ticker-track`, `table`, and the attribute
 hooks `[data-fx-card]`, `[data-reveal]`, `[data-kinetic]`, `[data-count]`,
 `[data-fx-magnetic]`.
+
+## The hub core (`hub-core.js`)
+
+THEHUB's mark is a core with satellites on spokes; the hero draws that object live. It is
+built to **mean** something, and the next edit must keep it honest:
+
+- **Four orbits = the four pillars; each orbit carries one node per tool in that pillar.**
+  Counts and names are read at runtime from the stats strip's `[data-count]` and
+  `.stat-lbl` in `index.html`. Nothing in the file states a number. Change the stats and the
+  object follows; never hardcode a count here.
+- Interaction: drag spins with inertia, click fires a shockwave, hover excites. Hovering a
+  stat lights its orbit, and hovering near an orbit's lead satellite adds `.is-hot` to that
+  stat. The pillar colours (AI `#22D3EE`, Utilities `#60A5FA`, Apps `#A78BFA`, CLI
+  `#34D399`) are shared with `../css/motion.css` §17 — change them in both places.
+- Drawing: every particle is positioned on the CPU into one interleaved buffer; the GPU only
+  rasterises additive point sprites and hairlines. No dependencies.
+
+**The blend constraint — read before moving anything.** The canvas is opaque black and is
+screen-blended so only its light lands on the page. `mix-blend-mode` only sees backdrop
+inside its own stacking context, and `.hero-immersive` is `position: sticky`, which always
+creates one, while the ambient field is a fixed layer outside it. Blended in place, the
+black stays a solid disc. So `armCore()` in `motion.js` **moves `.hero-core-inner` into
+`.fx-core-host` inside `.fx-field`**, and `placeCore()` keeps it over the empty
+`.hero-core` placeholder, which still owns the layout. No CSS on the hero fixes this
+(`isolation: auto` and `opacity: .999` were both tried and measured failing).
+
+Fallbacks: reduced motion, no WebGL, a failed shader or a lost context all show
+`/img/fx/core.webp` (a Higgsfield render) instead. The loop runs only while the hero is on
+screen and the tab is visible.
 
 ## For AI Agents
 
