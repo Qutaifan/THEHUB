@@ -1,5 +1,5 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-08-29 | Updated: 2026-08-29 -->
+<!-- Generated: 2026-08-29 | Updated: 2026-09-17 -->
 
 # css
 
@@ -12,15 +12,14 @@ the pillar, alternative, about and contact pages, with different backgrounds, te
 container widths and navigation. `site.css` collapses both onto the cyan palette the THEHUB
 logo mark already uses.
 
-Both files are **untracked as of 2026-08-29** (`git status` reports `?? css/`). They are
-new work on this branch, not yet committed.
+Both files are committed (first in PR #35, extended on `design/neon-hub-core`).
 
 ## Key Files
 
 | File | Description |
 |------|-------------|
-| `site.css` | 1,004 lines. Structural and visual system: tokens, reset, layout, nav, buttons, cards, editorial prose, tables, FAQ, ad slots, footer, search modal, cookie banner, responsive. Organised as 20 numbered sections, listed in the file header. |
-| `motion.css` | 1,019 lines. The immersive layer: ambient field, floating cards, kinetic type, scroll reveals, counters, tickers, landing sequence, brand mark. Paired with `../js/motion.js`. |
+| `site.css` | 1,172 lines (2026-09-17). Structural and visual system, in 22 numbered sections listed in the file header. §21 Neon holds the glow tokens (`--glow-sm/md/lg`, `--neon-text`); §22 Deep field holds the blue-black base palette. |
+| `motion.css` | 2,695 lines. The immersive layer: ambient field, cards, kinetic type, reveals, tickers, landing sequence, brand mark, review and pillar immersion, the ZYRN credit (09f), and the homepage stage (13–17: home stage, neon field, hub core, pillar holograms, pillar spectrum). Paired with `../js/motion.js` and `../js/hub-core.js`. |
 
 ## Measured state (2026-08-29)
 
@@ -87,6 +86,13 @@ Visual changes need a browser. Root `AGENTS.md` §0 rule 3: "verified in Chrome"
 ### Common Patterns
 
 - Tokens on `:root`, referenced with `var()`. Never a raw hex outside section 01.
+  **Exception, deliberate:** §22 redefines the palette on `html:root`, not `:root`. About
+  forty pages re-declare the old greys (`--bg:#0A0A0B`, `--card:#18181B`, …) in their own
+  inline `:root{}`, which comes later in source order; `html:root` outranks them without
+  editing those pages. Changing it back to `:root` silently reverts them to grey.
+- **The ZYRN credit (09f) is another firm's mark and is never recoloured** — its violet
+  seam is the one non-palette colour on the site, and the rules fighting `footer a`'s cyan
+  hover are compound on purpose.
 - Surfaces step `--bg-base` → `--surface-1` → `--surface-2`; text steps
   `--text-primary` → `--text-secondary` → `--text-muted`.
 - One visible focus treatment sitewide (`site.css:173`). The original templates had none,
