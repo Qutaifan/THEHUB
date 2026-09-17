@@ -1,0 +1,50 @@
+﻿# Cloudflare Pages header rules. Later matches win for the same header, so the
+# catch-all sits first and the asset rules override it.
+
+# HTML is the index of what everything else should be. It must always be
+# revalidated, otherwise a visitor can hold markup that predates the CSS it
+# links to.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+
+# Every local CSS and JS reference is stamped with ?v=<commit sha> at deploy
+# time by .github/scripts/stamp_assets.py, so a deploy changes the URL and
+# invalidates the cache on its own. That makes a one-year immutable cache safe
+# and correct: the bytes behind any given versioned URL genuinely never change.
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/search.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/toc.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# Content-hashed by its own build tool already.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts and images are addressed by stable paths and replaced rather than
+# edited in place; a week keeps them cheap without stranding a swap for long.
+/img/*
+  Cache-Control: public, max-age=604800
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Crawler and discovery files: always current.
+/sitemap.xml
+  Cache-Control: public, max-age=0, must-revalidate
+
+/robots.txt
+  Cache-Control: public, max-age=0, must-revalidate
+
+/feed.xml
+  Cache-Control: public, max-age=0, must-revalidate
+
+/tools.json
+  Cache-Control: public, max-age=0, must-revalidate

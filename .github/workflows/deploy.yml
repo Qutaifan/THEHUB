@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+﻿name: Deploy to Cloudflare Pages
 
 on:
   push:
@@ -10,6 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Stamp asset URLs with the build version
+        # Rewrites every local CSS/JS reference to ?v=<sha> in the checked-out
+        # tree only -- never committed back. Pairs with the one-year immutable
+        # cache headers in _headers: the URL changes on every deploy, so a
+        # returning visitor can never hold a stylesheet older than the markup
+        # that links it. Runs on pull_request too, so a regression in the
+        # script fails the check instead of surfacing in production.
+        run: python .github/scripts/stamp_assets.py
       - name: Deploy to Cloudflare Pages
         # Only ever runs on an actual push to main. On a pull_request event
         # this step (and the one below) are skipped, not failed, so the
