@@ -35,7 +35,7 @@ These are hard rules from the root `AGENTS.md`, and each exists because it was v
 3. **Never delete editorial content.** Count rendered body words per page before and after any bulk edit and compare totals. A bulk regex rewrite destroyed this entire corpus once; `scripts/archive/merge_reviews_recovery.js` is the script that spliced ~47,000 words back in from commit `3ef61dc`.
 4. **Never fabricate editorial claims.** No invented `ratingValue`, `reviewCount`, awards, testing methodology, or "we tested this for a week". `scripts/archive/fix_review_truthfulness.py` already had to strip exactly that.
 5. **Structured data must match visible content.** Every `FAQPage` question in the JSON-LD must be rendered on the page. Invisible markup risks a manual action.
-6. **One ad unit per review page** — slot `qutaifan-review-in-article` — with `min-height: 250px` reserved. Never a placeholder slot ID.
+6. **Advertising follows editorial eligibility.** Reviews below the computed `INDEXABLE` lifecycle must have no AdSense loader, manual unit, or initialization code. Keep the account verification meta. Eligible reviews may carry one unit — slot `qutaifan-review-in-article` — with `min-height: 250px` reserved. Never a placeholder slot ID. This is a conservative inventory rule, not a claim that passing the local gate guarantees AdSense approval.
 7. **Exactly one `<h1>` per page.** Duplicates were collapsed once already (`scripts/archive/fix_h1_and_duplicate_urls.js`); do not reintroduce them.
 
 ### Known state (measured 2026-08-27)

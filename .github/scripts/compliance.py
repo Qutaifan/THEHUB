@@ -36,6 +36,9 @@ import html
 import re
 import sys
 from pathlib import Path
+from html.parser import HTMLParser
+
+from content_quality import run_lifecycle_gate
 
 PUB = "ca-pub-9640734919758311"
 DOMAIN = "https://www.qutaifan.com"
@@ -53,6 +56,37 @@ MIN_HEIGHT_PAT = re.compile(r'min-height\s*:', re.I)
 PLACEHOLDER_SLOTS = {"1234567890", "0987654321", "auto", "your_real_slot_id"}
 MAX_UNITS_PER_PAGE = 2
 MIN_WORDS_BETWEEN_UNITS = 400
+
+
+class AdInventoryParser(HTMLParser):
+    """Detect advertising independently of attribute order and quote style."""
+
+    def __init__(self):
+        super().__init__()
+        self.inventory = []
+        self.in_script = False
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        self.in_script = tag == "script" or self.in_script
+        if tag == "script" and "googlesyndication.com/pagead/js/adsbygoogle.js" in attrs.get("src", "").lower():
+            self.inventory.append("AdSense loader")
+        if tag == "ins" and "adsbygoogle" in attrs.get("class", "").split():
+            self.inventory.append("manual ad unit")
+
+    def handle_endtag(self, tag):
+        if tag == "script":
+            self.in_script = False
+
+    def handle_data(self, data):
+        if self.in_script and "adsbygoogle" in data:
+            self.inventory.append("ad initialization")
+
+
+def check_ad_free_inventory(document: str) -> list[str]:
+    parser = AdInventoryParser()
+    parser.feed(document)
+    return [f"advertising forbidden on held-back content: {item}" for item in parser.inventory]
 
 
 def check_adsense_loader(html: str) -> list[str]:
@@ -310,9 +344,21 @@ def main() -> int:
         )
 
     all_pages = list(iter_site_files(site_root))
+    # A noindex tag does not disable ads. Compute eligibility from the unchanged
+    # editorial gate, so deleting noindex cannot restore ads on low-value pages.
+    reviews = run_lifecycle_gate(site_root)
+    ad_free_reviews = {f"reviews/{slug}.html" for slug, result in reviews.items()
+                       if result["computed_lifecycle"] != "INDEXABLE"}
     for p in all_pages:
         rel = p.relative_to(site_root)
         if _adsense_exempt(rel):
+            continue
+        if rel.as_posix() in ad_free_reviews:
+            # Ownership verification remains required even without ad serving.
+            if f'name="google-adsense-account" content="{PUB}"' not in p.read_text(encoding="utf-8").split('</head>')[0]:
+                all_problems.append(f"[adsense_loader] {rel}: missing AdSense account meta")
+            for reason in check_ad_free_inventory(p.read_text(encoding="utf-8")):
+                all_problems.append(f"[ad_free_inventory] {rel}: {reason}")
             continue
         for reason in check_adsense_loader(p.read_text(errors="ignore")):
             all_problems.append(f"[adsense_loader] {rel}: {reason}")
@@ -328,7 +374,7 @@ def main() -> int:
         print(f"\n{len(all_problems)} problem(s) across {len(CHECKS) + 1} checks, {len(all_pages)} pages scanned.")
         return 1
 
-    print(f"compliance OK — {len(CHECKS) + 1} checks clean across {len(all_pages)} pages")
+    print(f"compliance OK — {len(CHECKS) + 1} checks clean across {len(all_pages)} pages; {len(ad_free_reviews)} held-back reviews checked for zero advertising")
     return 0
 
 
