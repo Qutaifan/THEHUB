@@ -64,3 +64,8 @@ alongside the real trigger so a run can be forced by hand.
 - IndexNow API (`api.indexnow.org`)
 
 <!-- MANUAL: notes added below this line are preserved on regeneration -->
+
+2026-09-18 publication update: deploy.yml runs both gates on the full source tree,
+then stages `.public-site` with `.github/scripts/stage_public_site.py`. Only that
+artifact is deployed. Unfinished manuscripts stay versioned but are not public
+site assets. The PR deploy check validates the exact artifact without deploying it.

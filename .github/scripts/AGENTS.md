@@ -11,6 +11,12 @@ workflows in `../workflows/` hardcode this path.
 
 ## Key Files
 
+`stage_public_site.py` derives a deployment artifact from the full-source content
+gate, leaving held manuscripts intact. `test_publication.py` checks that held
+reviews cannot leak and eligible reviews cannot disappear. Do not change content
+thresholds to affect staging. Use an empty output directory or an identical one;
+the staging script never deletes or overwrites mismatched output.
+
 | File | Description |
 |------|-------------|
 | `compliance.py` | Sitewide technical/policy gate. Nine checks: AdSense loader per page, `ads.txt` authorized-sellers line, `robots.txt` directives, privacy-policy / editorial-policy / contact pages exist and say what they must, dormant-affiliate state, self-consistent indexability directives, and ad-placement integrity (matching `push()`, `min-height` reservation, ≤2 units/page, ≥400 words between units, no placeholder slot IDs). |

@@ -18,6 +18,12 @@ Both files are committed (first in PR #35, extended on `design/neon-hub-core`).
 
 ## Key Files
 
+`privacy.js` is a synchronous head script, before Google tags. It is independent
+of the visual layer. It blocks optional Analytics until Google's CMP supplies a
+GRANTED or NOT_APPLICABLE analytics-storage status. Unknown, denied, unconfigured,
+or failed CMP states keep Analytics disabled. Never replace this with a locally
+stored Accept flag. Google CMP owns consent collection and revocation.
+
 | File | Description |
 |------|-------------|
 | `motion.js` | 2,267 lines (2026-09-17). Single IIFE, `'use strict'`, no exports and no globals. Loaded sitewide as `<script src="/js/motion.js" defer>`. |

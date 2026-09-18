@@ -55,6 +55,16 @@ The editorial promise — honest coverage that names misleading free tiers, dark
 
 ## 3. Deployment reality
 
+**Publication update (2026-09-18):** `.github/scripts/stage_public_site.py` creates
+`.public-site/` from tracked public assets and reviews that clear the unchanged
+full-source editorial gate. The deploy workflow publishes `.public-site`, not the
+repository root. All 138 source manuscripts stay in `reviews/`; held manuscripts,
+tooling, vault files and abandoned scaffolds must never enter the artifact.
+Published link/search/data views are derived during staging. Do not hand-edit
+`.public-site`, and do not run editorial checks only against that smaller output:
+the complete source corpus remains authoritative. The following root-deploy notes
+describe the historical setup and its risks.
+
 **The repository root *is* the deployed website.** There is no build step and no output directory.
 
 ```
