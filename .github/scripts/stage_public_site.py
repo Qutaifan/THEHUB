@@ -19,7 +19,7 @@ from urllib.parse import urlsplit, unquote
 from content_quality import run_lifecycle_gate
 
 ROOT = Path(__file__).resolve().parents[2]
-ASSET_DIRS = {'css', 'js', 'img', 'fonts'}
+ASSET_DIRS = {'css', 'js', 'img', 'fonts', '_next'}
 ASSET_SUFFIXES = {'.css', '.js', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2'}
 ROOT_FILES = {'ads.txt', 'robots.txt', 'feed.xml', 'rss.xml', 'sitemap.xml', 'tools.json',
               'search-index.json', 'manifest.json', 'search.js', 'toc.js', '_headers', '_redirects',
@@ -44,8 +44,15 @@ class Links(HTMLParser):
         for line in source.splitlines(keepends=True):
             self.offsets.append(self.offsets[-1] + len(line))
         self.links = []
+        self.assets = []
 
     def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        asset = attributes.get('src', '') if tag in ('script', 'img', 'source') else ''
+        if tag == 'link' and attributes.get('rel') == 'stylesheet':
+            asset = attributes.get('href', '')
+        if asset.startswith('/') and not asset.startswith('//'):
+            self.assets.append(urlsplit(asset).path.lstrip('/'))
         if tag == 'a':
             line, col = self.getpos()
             raw = self.get_starttag_text()
@@ -153,6 +160,9 @@ def verify(plan, eligible, manuscripts):
             continue
         parser = Links(content.decode('utf-8'))
         parser.feed(content.decode('utf-8'))
+        for asset in parser.assets:
+            if asset not in plan:
+                errors.append(f'{name}: missing publication asset {asset}')
         for _, _, href in parser.links:
             slug = review_slug(href)
             if slug and slug not in eligible:

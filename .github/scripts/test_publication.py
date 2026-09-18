@@ -24,6 +24,12 @@ class PublicationTests(unittest.TestCase):
         del plan['reviews/' + next(iter(self.eligible)) + '.html']
         self.assertTrue(verify(plan, self.eligible, self.manuscripts))
 
+    def test_missing_error_page_stylesheet_fails(self):
+        plan = dict(self.plan)
+        stylesheet = next(p for p in plan if p.startswith('_next/static/css/'))
+        del plan[stylesheet]
+        self.assertTrue(any('missing publication asset' in e for e in verify(plan, self.eligible, self.manuscripts)))
+
     def test_route_normalization(self):
         self.assertEqual('example', review_slug('https://www.qutaifan.com/reviews/example.html?x=1'))
         self.assertEqual('example', review_slug('/reviews/example/'))
