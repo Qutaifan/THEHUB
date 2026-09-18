@@ -95,3 +95,9 @@ Use `python`, not `python3` — the latter hits a Microsoft Store shim on this m
   dependency install step.
 
 <!-- MANUAL: notes added below this line are preserved on regeneration -->
+
+`disable_held_review_ads.py` removes advertising only from reviews below the
+unchanged computed INDEXABLE lifecycle. Dry-run by default, `--apply` to write.
+It preserves exact editorial text and checks every page's body word count before
+writing. It adds a visible editorial-status note. It does not restore ads
+automatically or claim that the editorial backlog is resolved.

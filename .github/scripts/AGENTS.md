@@ -75,3 +75,10 @@ change.
 - Python 3.11 standard library only (`re`, `json`, `collections`, `pathlib`).
 
 <!-- MANUAL: notes added below this line are preserved on regeneration -->
+
+2026-09-18: Compliance now computes review eligibility using the unchanged content
+gate. Held-back reviews must contain zero advertising code; this is an enforced
+prohibition, not an unchecked loader exemption. Eligible pages still require the
+loader and all review pages retain account verification. Run regression tests with
+`python .github/scripts/test_ad_inventory.py`. Do not infer Google approval from
+these checks.
