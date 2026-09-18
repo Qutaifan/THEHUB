@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="/js/privacy.js"></script>
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WKLJQZBWD1"></script>
+
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -134,16 +135,16 @@
     .btn-secondary { background: var(--bg-card); border: 1px solid var(--border-2); color: var(--text-2); }
     .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(56,189,248,.45); }
     .btn-secondary:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--text); }
-    
+
     .disclosure { position: relative; z-index: 1; background: var(--bg-2); border-bottom: 1px solid var(--border); color: var(--text-3); font-size: .8rem; text-align: center; padding: 10px 24px; }
-    
+
     .comparison { padding: 46px 0 16px; position: relative; z-index: 1; }
     .comparison h2 { font-size: 1.5rem; font-weight: 850; letter-spacing: -.02em; margin-bottom: 16px; }
     .comparison-table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--bg-card); }
     .comparison-table th, .comparison-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: left; font-size: .86rem; }
     .comparison-table th { color: var(--text); background: var(--bg-3); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
     .comparison-table td { color: var(--text-2); }
-    
+
     .editorial-section { padding: 56px 0; position: relative; z-index: 1; }
     .editorial-section h2 { font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 850; letter-spacing: -.02em; margin-bottom: 18px; }
     .editorial-section h3 { font-size: 1.05rem; font-weight: 800; margin: 26px 0 8px; color: var(--text); }
@@ -157,7 +158,7 @@
     .content-table td { color: var(--text-2); }
     .content-table strong { color: var(--text); }
     .pick-badge { color: var(--green); font-weight: 800; }
-    
+
     .final-cta { padding: 56px 0; position: relative; z-index: 1; text-align: center; background: linear-gradient(180deg, transparent, rgba(56,189,248,.08)); border-top: 1px solid var(--border); }
     .final-cta h2 { font-size: 1.7rem; font-weight: 900; margin-bottom: 10px; }
     .final-cta p { color: var(--text-2); max-width: 640px; margin: 0 auto 24px; font-size: 1rem; }
@@ -221,7 +222,7 @@
     .badge-nosignup { background: var(--amber-lt);  color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
     .badge-new      { background: var(--pink-lt);   color: #f472b6; border: 1px solid rgba(236,72,153,.3); }
     .badge-api      { background: var(--blue-lt);   color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
-    
+
     .tool-link {
       display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
       background: var(--bg-2); border: 1px solid var(--border-2); border-radius: var(--r);
@@ -264,7 +265,7 @@
       .section { padding: 40px 0; }
       .tool-grid { grid-template-columns: 1fr; }
     }
-  
+
     .breadcrumb { font-size: .86rem; color: var(--text-3); margin: 18px auto 0; }
     .breadcrumb a { color: inherit; text-decoration: none; }
     .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
@@ -1313,11 +1314,11 @@
 
 <!-- Cookie Consent Banner -->
 <style>
-  #cookie-banner{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,11,.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.07);padding:16px 24px;z-index:1000;display:flex;align-items:center;justify-content:center;gap:16px;font-size:14px;color:#A1A1AA;font-family:system-ui,sans-serif}
-  #cookie-banner p{margin:0}
-  #cookie-banner a{color:#38BDF8;text-decoration:none}
-  #cookie-banner button{background:#38BDF8;color:#000;border:none;padding:8px 20px;border-radius:8px;font-weight:600;cursor:pointer}
-  #cookie-banner button:hover{background:#0EA5E9}
+
+
+
+
+
 
     /* internal review links */
     a.qh-review-link{color:inherit;text-decoration:none;border-bottom:1px dotted rgba(34,211,238,.55);}
@@ -1325,10 +1326,7 @@
     p.qh-review-link-line{margin:.35rem 0 1rem;font-size:.85rem;line-height:1.4;}
     p.qh-review-link-line a{color:#22D3EE;text-decoration:none;border-bottom:1px solid rgba(34,211,238,.35);}
 </style>
-<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-  <p>We use cookies and similar technologies to analyze traffic, serve ads, and improve your experience. <a href="/privacy-policy">Learn more</a>.</p>
-  <button onclick="document.getElementById('cookie-banner').style.display='none'">Accept</button>
-</div>
+<aside class="privacy-notice" aria-label="Privacy information"><p>We use cookies and similar technologies for advertising and optional analytics. Optional Google Analytics loads only after a usable signal from Google's consent service. You can review available choices or read our <a href="/privacy-policy">privacy policy</a>.</p><button type="button" data-privacy-settings>Privacy choices</button> <span role="status" data-privacy-status></span></aside>
 <script src="/search.js"></script>
 <script src="/toc.js?v=2" defer></script>
 </body>

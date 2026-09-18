@@ -10,6 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check the complete source corpus
+        run: |
+          python3 .github/scripts/compliance.py .
+          python3 .github/scripts/content_quality.py .
+      - name: Stage only public content (preserve all source manuscripts)
+        run: |
+          python3 .github/scripts/stage_public_site.py --apply --output .public-site
+          python3 .github/scripts/test_publication.py
       - name: Deploy to Cloudflare Pages
         # Only ever runs on an actual push to main. On a pull_request event
         # this step (and the one below) are skipped, not failed, so the
@@ -23,7 +34,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy . --project-name=qutaifan-website --commit-dirty=true
+          command: pages deploy .public-site --project-name=qutaifan-website --commit-dirty=true
 
       - name: Notify IndexNow (Bing / Yandex)
         if: github.event_name == 'push' && success()

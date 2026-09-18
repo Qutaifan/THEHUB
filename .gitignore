@@ -29,3 +29,6 @@ docs/facts/_fetches/
 
 # OMC session state - local tooling scratch, never site content
 .omc/
+
+# Generated publication artifact; source manuscripts remain in reviews/.
+.public-site/
